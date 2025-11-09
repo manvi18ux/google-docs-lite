@@ -1,0 +1,152 @@
+1. What is node_modules?
+
+When you create a Node.js project, you often install extra tools or libraries using npm (Node Package Manager).
+
+Simple Example:
+
+If you use Express, you didn’t write its code yourself.
+When you run:
+
+npm install express
+
+
+It downloads Express (and other code Express needs) and puts it inside the node_modules folder.
+
+Then, in your app, when you write:
+
+import express from "express";
+
+
+Node.js looks inside node_modules to find and use Express.
+
+⚠️ Why You Don’t Push node_modules to GitHub
+
+Because it’s huge — sometimes hundreds of megabytes!
+Also, it can always be reinstalled later.
+
+That’s why we add this line in .gitignore:
+
+node_modules
+
+
+So GitHub ignores that folder.
+
+Instead, you only push a package.json file — it lists all the libraries and versions.
+Anyone who clones your project can simply run:
+
+npm install
+
+
+…and Node.js will automatically rebuild the node_modules folder using that file.
+
+2. Server
+
+In a full-stack project like Google Docs Lite, you usually have two main parts:
+
+Frontend (client) → what users see (buttons, text, editor UI).
+
+Backend (server) → what happens behind the scenes (saving data, login, permissions, etc).
+
+The server folder holds all the backend code — the brain of your app.
+It handles logic, data, and communication with the database.
+
+server/
+│
+├── app.js                  → main entry file (starts your backend)
+├── config/
+│   └── db.js               → code to connect MongoDB
+├── src/
+│   ├── controllers/        → logic for handling routes (what to do on create, read, etc)
+│   ├── routes/             → defines the API endpoints (like /signup, /documents)
+│   ├── models/             → defines MongoDB schemas (like User, Document)
+│   ├── middleware/         → functions that run before routes (like JWT authentication)
+│
+└── .env                    → stores secret info (DB password, JWT key)
+
+
+Example (Simplified Flow)
+
+User hits “Save Document” button →
+Frontend sends POST request →
+Server receives it →
+documentRoutes.js finds the correct route →
+documentController.js handles the logic →
+db.js connects to MongoDB →
+Document is saved →
+Server sends back a success response.
+
+3. Tech Stack
+Layer	Technology	Why
+Frontend	React / Next.js	Build UI (Phase 2 onwards)
+Backend	Node.js + Express	Handles API requests easily
+Database	MongoDB + Mongoose	Stores users & documents
+Auth	JWT + bcryptjs	Secure login & password hashing
+
+4. User Model
+name: String, required
+email: String, required, unique
+passwordHash: String, required (encrypted password)
+role: String, enum ["owner", "editor", "viewer"], default "viewer"
+
+
+Each user has a role → determines what they can do.
+
+Passwords are hashed for security.
+
+5. Document Model
+title: String, required
+content: String, default ""
+ownerId: ObjectId → links to user
+timestamps: true → createdAt & updatedAt
+
+
+Each document belongs to a user.
+
+ownerId ensures only the owner can access it.
+
+6. Authentication Flow
+
+Signup → POST /api/auth/signup
+
+Sends name, email, password, role
+
+Backend hashes password → saves user → returns JWT token
+
+Login → POST /api/auth/login
+
+Sends email, password
+
+Backend verifies → returns JWT token
+
+JWT Token → sent in Authorization: Bearer <token> for all protected routes
+
+Backend middleware (protect) verifies token
+
+Adds req.user → allows access to routes
+
+Simple analogy: JWT is like a digital ID card — proves who you are every time.
+
+7. Document CRUD Routes
+Action	Method & URL	Description
+Create	POST /api/documents	Create new document
+Read all	GET /api/documents	Get all documents of logged-in user
+Read one	GET /api/documents/:id	Get one document by ID
+Update	PUT /api/documents/:id	Update title/content of a document
+Delete	DELETE /api/documents/:id	Delete a document
+
+All routes are JWT-protected.
+
+Owner can only access their own documents (ownerId = req.user.id)
+
+8. Middleware – protect
+
+Checks if Authorization header exists
+
+Verifies token → decodes user ID
+
+Fetches user from DB → adds to req.user
+
+Denies access if token is missing or invalid
+
+Simple analogy: Middleware = security guard at the door.
+
