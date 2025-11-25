@@ -1,34 +1,37 @@
-import express from "express";//Express → server framework for handling HTTP requests.
-import dotenv from "dotenv";//dotenv → to read environment variables like database URL and JWT secret.
-import connectDB from "./config/db.js";//onnectDB → function to connect to MongoDB.
+import express from "express";
+import dotenv from "dotenv";
+import connectDB from "./config/db.js";
 import authRoutes from "./src/routes/authRoutes.js";
-import documentRoutes from "./src/routes/documentRoutes.js";//uthRoutes & documentRoutes → your route handlers.
+import documentRoutes from "./src/routes/documentRoutes.js";
 
-dotenv.config();//dotenv.config() → loads .env file so you can use secrets safely.
-connectDB();//connectDB() → connects to MongoDB before starting the server.
+dotenv.config();
+connectDB();
 
-const app = express();//Create an Express app.
-app.use(express.json());//express.json() → middleware to automatically parse incoming JSON requests.
+const app = express();
 
-app.post("/api/test", (req, res) => {
-  res.send("Test route works!");
-});//A simple test route to check if your server is running.You can open /api/test in Postman or browser → should return "Test route works!".
+// Middlewares
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
+// Simple CORS
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
 
-app.use("/api/auth", authRoutes);///api/auth → handles signup and login routes.
-app.use("/api/documents", documentRoutes);///api/documents → handles document CRUD routes.
+// API Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/documents", documentRoutes);
 
-app.listen(5000, () => console.log("Server running on port 5000"));//Starts the server on port 5000.After this, your backend can receive requests from Postman or your frontend.
+// Root test
+app.get("/", (req, res) => {
+  res.json({ message: "Google Docs Lite API Working" });
+});
 
-/*Purpose - This file starts your backend server, connects to the database, and registers all the API routes.
-Think of it as the central control room for your backend.
+const PORT = process.env.PORT || 5000;
 
-Express app → your server building
-
-Middleware (express.json) → staff that reads and understands incoming requests
-
-Routers → different departments handling specific tasks
-
-connectDB → connect the server to the database
-
-app.listen → opens the doors so users can start sending requests.*/
+app.listen(PORT, () => {
+  console.log(`🚀 Express API running on port ${PORT}`);
+});

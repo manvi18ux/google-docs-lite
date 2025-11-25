@@ -15,19 +15,18 @@ This checks if that header exists and starts with the word "Bearer".*/
     try {
       token = req.headers.authorization.split(" ")[1];//This takes the actual token part (after the word “Bearer”). Example:"Bearer abc123" After splitting:token = "abc123".
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id).select("-passwordHash"); /*Once verified, we decode the token and get the user’s ID from it.
+      req.user = await User.findById(decoded.id).select("-passwordHash"); /*Once verified, we decode the token and get the user's ID from it.
 
-Then we fetch the user from MongoDB (but don’t include the passwordHash for safety).
+Then we fetch the user from MongoDB (but don't include the passwordHash for safety).
 
-This adds the user’s info to req.user, so now other routes can use it.*/
-      next();/*This moves the request forward to the next function — like the controller (create, update, etc.).
+This adds the user's info to req.user, so now other routes can use it.*/
+      return next();/*This moves the request forward to the next function — like the controller (create, update, etc.).
 
-If this line isn’t called, the request stops here.*/
+If this line isn't called, the request stops here.*/
     } catch (err) {
-      return res.status(401).json({ message: "Not authorized" }); //If the token is missing or invalid, it sends back a “Not authorized” message.
+      return res.status(401).json({ message: "Not authorized" }); //If the token is missing or invalid, it sends back a "Not authorized" message.
     }
-  }
-  if (!token) {
+  } else {
     return res.status(401).json({ message: "No token, authorization denied" });
   }
 };

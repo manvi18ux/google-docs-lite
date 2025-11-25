@@ -1,0 +1,9 @@
+import { Hocuspocus } from "@hocuspocus/server";
+
+const server = new Hocuspocus({
+  port: 1234,
+});
+
+server.listen();
+
+console.log("🔥 Hocuspocus v2 server running on ws://localhost:1234");
